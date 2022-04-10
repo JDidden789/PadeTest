@@ -80,6 +80,7 @@ class AgentProtocol(PeerProtocol):
         in client mode and an agent in server mode.
         Now, nothing is made here.
         """
+        # self.fact.node.activeTransports.append(self.transport)
         PeerProtocol.connectionMade(self)
 
     def connectionLost(self, reason):
@@ -271,6 +272,7 @@ class Agent_(object):
         self.system_behaviours = list()
         self.__messages = list()
         self.ILP = None
+        self.node_number = None
 
     @property
     def aid(self):
@@ -582,7 +584,7 @@ class Agent_(object):
     def resume_agent(self):
         """This method resumes the agent after it has been pause. Still not working
         """
-        print(self.system_behaviours,self.behaviours)
+        # print(self.system_behaviours,self.behaviours)
         self.on_start()
         self.ILP.startListening()
 
@@ -734,6 +736,24 @@ class Agent(Agent_):
         message.set_system_message(is_system_message=True)
         self.comport_ident = SubscribeBehaviour(self, message)
         self.system_behaviours.append(self.comport_ident)
+
+    def cancle_ams(self, ams):
+        """Summary
+
+        Parameters
+        ----------
+        ams : TYPE
+            Description
+        """
+        super(Agent, self).cancel_ams(ams)
+        message = ACLMessage(ACLMessage.CANCEL)
+        message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
+        ams_aid = AID('ams@' + self.ams['name'] + ':' + str(self.ams['port']))
+        message.add_receiver(ams_aid)
+        message.set_content('DISC')
+        message.set_system_message(is_system_message=True)
+        reactor.callLater(random.uniform(0.0, 1.0), self.agent.send, message)
+
 
     def react(self, message):
         """Summary

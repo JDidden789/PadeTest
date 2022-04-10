@@ -29,6 +29,7 @@ from pade.misc.utility import display_message, start_loop
 
 from pade.web import flask_server
 from pade.web.flask_server import AgentModel, basedir
+from pade.core.Organization import Organization
 
 
 from alchimia import wrap_engine
@@ -52,7 +53,7 @@ MESSAGES = Table('messages', METADATA, autoload=True, autoload_with=ENGINE)
 AGENTS = Table('agents', METADATA, autoload=True, autoload_with=ENGINE)
 
 class Sniffer(Agent):
-    """This is the class that implements the AMS agent."""
+    """This is the class that implements the Sniffer agent."""
 
     def __init__(self, host='localhost', port=8001, debug=False):
         self.sniffer_aid = AID('sniffer@' + str(host) + ':' + str(port))
@@ -127,5 +128,6 @@ class Sniffer(Agent):
                     self.buffer_control = False
 
 if __name__ == '__main__':
-    sniffer = Sniffer(port=sys.argv[1])
-    start_loop([sniffer])
+    sniffer = Sniffer(port=8001)
+    Org = Organization(reactor)
+    Org.start_loop([sniffer])

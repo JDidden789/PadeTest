@@ -24,6 +24,8 @@ THE SOFTWARE.
 """
 
 from twisted.internet import reactor, threads
+from twisted.internet.endpoints import TCP4ServerEndpoint
+# import pade.core.agent as N
 
 from datetime import datetime
 import click
@@ -69,12 +71,16 @@ def call_from_thread(method, *args):
 
 def start_loop(agents):
     """Start reactor thread main loop"""
-    reactor.suggestThreadPoolSize(30)
+    reactor.suggestThreadPoolSize(1)
     for agent in agents:
         agent.update_ams(agent.ams)
         agent.on_start()
+        endpoint = TCP4ServerEndpoint(reactor, agent.aid.port)
+        # node = Node(endpoint, reactor, agent.agentInstance)
+        # node.listen()
+        endpoint.listen(agent.agentInstance)
         ILP = reactor.listenTCP(agent.aid.port, agent.agentInstance)
-        agent.ILP = ILP
+        agent.ILP = endpoint
     reactor.run()
 
 
@@ -98,3 +104,16 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
     # Print New Line on Complete
     # if iteration == total:
     #     print()
+
+
+def start_single_agent(agent):
+    agent.update_ams(agent.ams)
+    agent.on_start()
+    endpoint = TCP4ServerEndpoint(reactor, agent.aid.port)
+    node = Node(endpoint, reactor, agent.agentInstance)
+    node.listen()
+    agent.ILP = endpoint
+
+def stop_agent(agent):
+    agent.agentInstance.stopListening()
+

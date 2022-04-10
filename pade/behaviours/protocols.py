@@ -510,6 +510,20 @@ class FipaContractNetProtocol(FipaProtocol):
         else:
             return
 
+    def notify(self, message):
+        """notify
+
+        """
+        if self.is_initiator and message is not None:
+
+            if message.performative == ACLMessage.CFP:
+
+                self.cfp_qty = len(message.receivers)
+                self.received_qty = 0
+                self.proposes = []
+                self.timed_behaviour()
+                self.agent.send(message)
+
 
 class FipaSubscribeProtocol(FipaProtocol):
     """This class implements the FipaSubscribeProtocol protocol,
@@ -649,3 +663,10 @@ class FipaSubscribeProtocol(FipaProtocol):
         for sub in self.subscribers:
             message.add_receiver(sub)
         self.agent.send(message)
+
+
+    def get_partial_subscribers(self, filter):
+        if filter is None:
+            return self.subscribers
+        else:
+            return set(s for s in self.subscribers if filter in str(s))

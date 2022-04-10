@@ -12,11 +12,13 @@
         margin-bottom: 15%;
         margin-left: 5%;
     }
+
 </style>
 </head>
 
-<body>
 
+
+<body>
     {% block content %}
 
     <div class="container">
@@ -50,7 +52,7 @@
 
                             <form action="{{ url_for('manageAgent') }}" method="post">
                                 <input type="hidden" name="kill" value="{{ agent.id }}">
-                                <input class="btn btn-danger" type="submit" value="Kill Agent">
+                                <input class="btn btn-danger" type="submit" value="Stop Agent">
                             </form>
                         </div>
                     </div>
@@ -72,15 +74,20 @@
                     $(".list-group").html(response.find(".list-group").html());
                 }
             };
-            xhttp.open("GET", "http://localhost:5000/session/{{ session.id }}", true);
+            xhttp.open("GET", "http://localhost:5000/session/{{ session.id }}", false);
             xhttp.send();
             setTimeout(loadData, 2000);
         };
         $(document).ready(function() {
             // run the first time; all subsequent calls will take care of themselves
-            setTimeout(loadData, 2000);
+            setTimeout(loadData, 20000);
         });
     </script>
+
+    <meta http-equiv="refresh" content="2"> # Refresh entire page
+
 </body>
 
 {% include 'footer.html' %}
+
+

@@ -75,18 +75,38 @@ class ComportVerifyConnTimed(TimedBehaviour):
             now = datetime.now()
             delta = now - date
             table.append([agent_name, str(delta.total_seconds())])
-            if delta.total_seconds() > 20.0:
+            if delta.total_seconds() > 10.0:
                 desconnect_agents.append(agent_name)
                 self.agent.agentInstance.table.pop(agent_name)
-                display_message(self.agent.aid.name, 'Agent {} disconnected.'.format(agent_name))    
+                display_message(self.agent.aid.name, 'Agent {} disconnected.'.format(agent_name))
+
+        # print(TWISTED_ENGINE.execute("SELECT * FROM AGENTS"))
+        # # conn.commit()
+        # result = TWISTED_ENGINE.fetchall()
+        # for row in result:
+        #     print(row)
+        #     print("\n")
 
         for agent_name in desconnect_agents:
             self.agent.agents_conn_time.pop(agent_name)
+            sql_act = "DELETE FROM AGENTS WHERE name = ?"
+            # print(agent_name)
+            # print(AGENTS.get_children())
+            # insert_obj = AGENTS.delete()
+            # col = AGENTS.columns.name
+            # sql_act = insert_obj.where(whereclause=agent_name)
+            # yield TWISTED_ENGINE.execute(sql_act)
+            reactor.callLater(0.1, self.deregister_agent_in_db, sql_act, agent_name)
 
         if self.agent.debug:
             display_message(self.agent.aid.name, 'Calculating response time of the agents...')
             table = AsciiTable(table)
             print(table.table)
+
+    @inlineCallbacks
+    def deregister_agent_in_db(self, sql_act, agent_name):
+        print("deregister" + agent_name)
+        yield TWISTED_ENGINE.execute(sql_act, agent_name)
 
 
 class CompConnectionVerify(FipaRequestProtocol):
@@ -144,6 +164,7 @@ class PublisherBehaviour(FipaSubscribeProtocol):
             # registers the agent in the database.
 
             insert_obj = AGENTS.insert()
+            print(sender.name)
             sql_act = insert_obj.values(name=sender.name,
                                         session_id=self.agent.session.id,
                                         date=datetime.now(),
@@ -181,6 +202,7 @@ class PublisherBehaviour(FipaSubscribeProtocol):
     def handle_cancel(self, message):
         self.deregister(self, message.sender)
         display_message(self.agent.aid.name, message.content)
+        print("AGENT CANCELLED")
 
     def notify(self):
         message = ACLMessage(ACLMessage.INFORM)

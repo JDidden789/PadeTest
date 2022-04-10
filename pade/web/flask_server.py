@@ -13,6 +13,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
 from flask_login import UserMixin
+from livereload import Server
 
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
@@ -315,6 +316,26 @@ def rsession_pade(rsession_id):
     data = json.loads(res.content)
     return render_template('remote_sessions.html', data=data)
 
+@app.route('/suggestions')
+def suggestions():
+    text = request.args.get('jsdata')
+
+    suggestions_list = []
+
+    if text:
+        r = requests.get('http://suggestqueries.google.com/complete/search?output=toolbar&hl=ru&q={}&gl=in'.format(text))
+
+        soup = BeautifulSoup(r.content, 'lxml')
+
+        suggestions = soup.find_all('suggestion')
+
+        for suggestion in suggestions:
+            suggestions_list.append(suggestion.attrs['data'])
+
+        #print(suggestions_list)
+
+    return render_template('suggestions.html', suggestions=suggestions_list)
+
 
 @app.route('/session/agent/<agent_id>')
 @login_required
@@ -583,7 +604,8 @@ def run_server(secure):
             login_manager._login_disabled = False
         else:
             login_manager._login_disabled = True
-
+    # server = Server(app)
+    # server.serve()
     app.run(host='0.0.0.0', port=5000, debug=None)
 
 

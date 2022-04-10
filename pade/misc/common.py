@@ -63,7 +63,8 @@ class FlaskServerProcess(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
 
     def run(self):
-        run_server()
+        run_server(secure=None)
+
 
 class PadeSession(object):
 
@@ -153,7 +154,6 @@ class PadeSession(object):
             # from Twisted to launch the agent
             ams_agent = AMS(host=self.ams['name'],
                             port=self.ams['port'],
-                            session=db_session,
                             debug=self.ams_debug)
             reactor.listenTCP(ams_agent.aid.port, ams_agent.agentInstance)
 
@@ -167,7 +167,7 @@ class PadeSession(object):
                              password=user['password'],
                              session_id=db_session.id)
                     users_db.append(u)
-
+                #
                 db.session.add_all(users_db)
                 db.session.commit()
 
@@ -207,11 +207,28 @@ class PadeSession(object):
             i = 1.0
             agents_process = list()
             for agent in self.agents:
-                a = AgentProcess(agent, self.ams, i)
-                # a.daemon = True
-                a.start()
+                reactor.callLater(i, self.__listen_agent, agent)
+                a = Agent(aid=agent.aid)
                 agents_process.append(a)
                 i += 0.1
+            # db.session.add_all(agents_process)
+            # db.session.commit()
+            #
+            #
+            # for agent in self.agents:
+            #     agent.update_ams(self.ams)
+            #     agent.on_start()
+            #     ILP = reactor.listenTCP(agent.aid.port, agent.agentInstance)
+            #     agent.ILP = ILP
+            #     print(agent.agentInstance)
+            #
+            #
+            # for agent in self.agents:
+            #     a = AgentProcess(agent, self.ams, i)
+            #     # a.daemon = True
+            #     a.start()
+            #     agents_process.append(a)
+            #     i += 0.1
             print('-----')
             print(reactor)
             reactor.run()
